@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic CGPA Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
+        
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.55);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --glass-highlight: rgba(255, 255, 255, 0.8);
+            --accent-color: 59, 130, 246; 
+        }
+
+        .dark {
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-highlight: rgba(255, 255, 255, 0.05);
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #e0e7ff 0%, #f1f5f9 50%, #fae8ff 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+
+        .dark body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+            border-radius: 24px;
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(4px);
+            transition: all 0.3s ease;
+            color: #0f172a;
+        }
+        .dark .glass-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .glass-input:focus {
+            border-color: rgb(var(--accent-color));
+            box-shadow: 0 0 0 4px rgba(var(--accent-color), 0.2);
+            outline: none;
+        }
+
+        .summary-glass {
+            background: linear-gradient(135deg, rgba(var(--accent-color), 0.9), rgba(var(--accent-color), 1));
+            color: white;
+            box-shadow: 0 20px 50px -12px rgba(var(--accent-color), 0.5);
+        }
+
+        .liquid-button {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+            color: #1e293b;
+        }
+        .dark .liquid-button {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f1f5f9;
+        }
+
+        .accent-bg { background-color: rgb(var(--accent-color)); }
+        .accent-border { border-color: rgb(var(--accent-color)); }
+
+        .toggle-active { 
+            background: white; 
+            color: #0f172a; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        }
+        .dark .toggle-active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide { animation: slideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+        #toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 1.25rem;
+            background: #0f172a;
+            color: white;
+            transform: translateY(200%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        #toast.show { transform: translateY(0); }
+    </style>
+</head>
+<body class="py-12 px-4">
+    <div id="toast"></div>
+
+    <!-- UI Controls -->
+    <div class="fixed top-6 left-6 z-[100] flex flex-col gap-3">
+        <div class="glass-card p-3 flex flex-col gap-3 shadow-xl">
+            <div class="flex gap-3 items-center px-1">
+                <input type="color" id="accent-picker" oninput="updateAccent(this.value)" class="w-6 h-6 rounded-full cursor-pointer border-none bg-transparent" value="#3b82f6">
+                <span class="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-slate-100 lang-key" data-en="Theme" data-zh="主題">Theme</span>
+            </div>
+            <div class="flex flex-col gap-1">
+                <button onclick="setThemeMode('light')" id="theme-light" class="text-[10px] font-bold p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 lang-key text-slate-900 dark:text-white" data-en="Light" data-zh="淺色">Light</button>
+                <button onclick="setThemeMode('dark')" id="theme-dark" class="text-[10px] font-bold p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 lang-key text-slate-900 dark:text-white" data-en="Dark" data-zh="深色">Dark</button>
+                <button onclick="setThemeMode('system')" id="theme-system" class="text-[10px] font-bold p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 border-t border-black/5 dark:border-white/5 lang-key text-slate-900 dark:text-white" data-en="Auto" data-zh="自動">Auto</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed top-6 right-6 z-[100]">
+        <button onclick="toggleLanguage()" class="glass-card h-12 px-6 flex items-center gap-3 font-bold text-sm hover:bg-white/40 dark:hover:bg-white/10 transition-all shadow-xl text-slate-900 dark:text-white">
+            <span id="lang-indicator">English</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        </button>
+    </div>
+
+    <div class="max-w-5xl mx-auto animate-slide">
+        <!-- Main Header -->
+        <header class="text-center mb-16">
+            <h1 class="text-5xl md:text-7xl font-black text-slate-950 dark:text-white tracking-tighter mb-4 transition-colors duration-500 lang-key" data-en="CGPA Calculator" data-zh="成績績點計算器">CGPA Calculator</h1>
+            <p class="text-slate-600 dark:text-slate-400 font-medium text-lg transition-colors duration-500 lang-key" data-en="Fluid academic management at your fingertips" data-zh="觸手可及的流暢學業管理">Fluid academic management at your fingertips</p>
+        </header>
+
+        <!-- Summary -->
+        <div class="summary-glass rounded-[40px] p-10 mb-12 flex flex-col md:flex-row items-center justify-between transition-all">
+            <div class="text-center md:text-left">
+                <p class="opacity-80 text-[10px] font-black uppercase tracking-[0.3em] mb-2 lang-key" data-en="OVERALL CGPA" data-zh="累計總績點">OVERALL CGPA</p>
+                <h2 id="overall-cgpa" class="text-8xl font-black tracking-tighter">0.00</h2>
+            </div>
+            <div class="grid grid-cols-2 gap-12 mt-10 md:mt-0">
+                <div class="text-center md:text-right">
+                    <p class="opacity-80 text-[10px] font-black uppercase tracking-widest mb-1 lang-key" data-en="TOTAL CREDITS" data-zh="總學分">TOTAL CREDITS</p>
+                    <p id="overall-credits" class="text-4xl font-black">0</p>
+                </div>
+                <div class="text-center md:text-right">
+                    <p class="opacity-80 text-[10px] font-black uppercase tracking-widest mb-1 lang-key" data-en="GRADED UNITS" data-zh="計分學分">GRADED UNITS</p>
+                    <p id="overall-graded-credits" class="text-4xl font-black">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Tools -->
+        <div class="flex flex-wrap items-center justify-center gap-4 mb-12">
+            <div class="bg-slate-200/50 dark:bg-slate-800/50 p-1.5 rounded-2xl flex gap-1 items-center border border-white/20">
+                <button id="btn-round-off" onclick="setRounding('off')" class="px-6 py-2.5 rounded-xl text-xs font-black transition-all toggle-active lang-key" data-en="Round Off" data-zh="不進位">Round Off</button>
+                <button id="btn-round-up" onclick="setRounding('up')" class="px-6 py-2.5 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-slate-400 lang-key" data-en="Round Up" data-zh="四捨五入">Round Up</button>
+            </div>
+            <div class="h-10 w-px bg-slate-300 dark:bg-slate-700 hidden sm:block"></div>
+            <button onclick="saveToBrowser()" class="liquid-button h-12 px-6 rounded-2xl text-xs font-black flex items-center gap-2 hover:shadow-lg">
+                <span>💾 <span class="lang-key" data-en="Sync" data-zh="同步儲存">Sync</span></span>
+            </button>
+            <button onclick="loadFromBrowser()" class="liquid-button h-12 px-6 rounded-2xl text-xs font-black flex items-center gap-2 hover:shadow-lg">
+                <span>📂 <span class="lang-key" data-en="Restore" data-zh="恢復紀錄">Restore</span></span>
+            </button>
+            <input type="file" id="upload-input" accept=".csv" onchange="handleFileUpload(event)" style="display:none">
+            <button onclick="document.getElementById('upload-input').click()" class="liquid-button h-12 px-6 rounded-2xl text-xs font-black flex items-center gap-2 hover:shadow-lg">
+                <span>📤 <span class="lang-key" data-en="Import" data-zh="匯入">Import</span></span>
+            </button>
+            <button onclick="exportData()" class="liquid-button h-12 px-6 rounded-2xl text-xs font-black flex items-center gap-2 hover:shadow-lg">
+                <span>📥 <span class="lang-key" data-en="Export" data-zh="匯出">Export</span></span>
+            </button>
+        </div>
+
+        <!-- Quick Mode -->
+        <div class="mb-12">
+            <button onclick="toggleQuickMode()" class="flex items-center gap-4 text-sm font-black text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all px-4 group">
+                <span class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg id="quick-mode-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="transform transition-transform duration-300 text-slate-500 dark:text-slate-400"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </span>
+                <span class="lang-key" data-en="QUICK MODE: Include Existing Standing" data-zh="快速模式：包含現有成績">QUICK MODE: Include Existing Standing</span>
+            </button>
+            <div id="quick-mode-section" class="glass-card p-10 mt-6 hidden border-l-[8px] accent-border animate-slide">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 lang-key" data-en="Current CGPA" data-zh="目前累計 GPA">Current CGPA</label>
+                        <input type="number" id="quick-cgpa" oninput="calculateAll()" step="0.01" min="0" max="4.3" placeholder="4.00" class="glass-input w-full h-14 px-6 rounded-2xl font-black text-lg">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 lang-key" data-en="Cumulative Units" data-zh="累計總學分">Cumulative Units</label>
+                        <input type="number" id="quick-credits" oninput="calculateAll()" step="0.5" min="0" placeholder="0.0" class="glass-input w-full h-14 px-6 rounded-2xl font-black text-lg">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Semesters Area -->
+        <div id="semesters-container" class="space-y-12"></div>
+
+        <!-- Actions -->
+        <div class="mt-20 flex flex-wrap justify-center gap-8 pb-20">
+            <button onclick="addSemester()" class="accent-bg text-white px-12 py-5 rounded-[2rem] font-black text-lg transition-all shadow-2xl hover:scale-105 active:scale-95 lang-key" data-en="+ Add Semester" data-zh="+ 新增學期">+ Add Semester</button>
+            <button onclick="openClearModal()" class="liquid-button text-red-500 dark:text-red-400 px-12 py-5 rounded-[2rem] font-black text-lg hover:bg-red-50 dark:hover:bg-red-500/10 lang-key" data-en="Reset All" data-zh="重設全部">Reset All</button>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="clear-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-[1000] flex items-center justify-center p-6 hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-[3rem] w-full max-w-md p-10 shadow-2xl border border-white/10">
+            <h3 class="text-3xl font-black text-slate-950 dark:text-white mb-4 lang-key" data-en="Wipe Data?" data-zh="清除資料？">Wipe Data?</h3>
+            <p class="text-slate-600 dark:text-slate-400 mb-10 font-medium lang-key" data-en="This action will permanently delete all your entries." data-zh="這將會永久刪除您所有的輸入內容。">This action will permanently delete all your entries.</p>
+            <div class="flex gap-4">
+                <button onclick="closeClearModal()" class="h-16 rounded-2xl font-black text-slate-500 bg-slate-100 dark:bg-slate-800 flex-1 lang-key" data-en="Cancel" data-zh="取消">Cancel</button>
+                <button onclick="confirmClearAllData()" class="h-16 rounded-2xl font-black text-white bg-red-600 flex-1 shadow-xl lang-key" data-en="Delete" data-zh="刪除">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let semesterCount = 0;
+        let roundingMode = 'off';
+        let isQuickModeActive = false;
+        let currentLang = 'en';
+        let currentThemeMode = 'system';
+        const gradeScale = { "A+": 4.3, "A": 4.0, "A-": 3.7, "B+": 3.3, "B": 3.0, "B-": 2.7, "C+": 2.3, "C": 2.0, "C-": 1.7, "D+": 1.3, "D": 1.0, "F": 0.0 };
+
+        function updateAccent(hex) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            document.documentElement.style.setProperty('--accent-color', `${r}, ${g}, ${b}`);
+            localStorage.setItem('cgpa_accent', hex);
+        }
+
+        function setThemeMode(mode) {
+            currentThemeMode = mode;
+            const root = document.documentElement;
+            const isDark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            
+            if (isDark) root.classList.add('dark');
+            else root.classList.remove('dark');
+
+            ['theme-light', 'theme-dark', 'theme-system'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.opacity = id.includes(mode) ? '1' : '0.4';
+            });
+            localStorage.setItem('cgpa_theme_mode', mode);
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'zh' : 'en';
+            document.getElementById('lang-indicator').innerText = currentLang === 'en' ? 'English' : '繁體中文';
+            document.querySelectorAll('.lang-key').forEach(el => {
+                if(el.dataset[currentLang]) el.innerText = el.dataset[currentLang];
+            });
+            localStorage.setItem('cgpa_lang', currentLang);
+            calculateAll();
+        }
+
+        function showToast(en, zh) {
+            const toast = document.getElementById('toast');
+            toast.innerText = currentLang === 'en' ? en : zh;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function addSemester(customName = null) {
+            semesterCount++;
+            const container = document.getElementById('semesters-container');
+            const div = document.createElement('div');
+            const currentId = semesterCount;
+            const defaultName = currentLang === 'en' ? `Semester ${currentId}` : `第 ${currentId} 學期`;
+            const displayName = customName || defaultName;
+            
+            div.id = `semester-block-${currentId}`;
+            div.className = "semester-block glass-card overflow-hidden animate-slide mb-12 border-t-8 accent-border";
+            div.innerHTML = `
+                <div class="bg-black/5 dark:bg-black/20 px-8 py-6 border-b border-black/5 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <h3 contenteditable="true" onkeypress="return event.key != 'Enter';" 
+                        class="semester-title text-4xl font-black text-slate-950 dark:text-white transition-colors duration-500 outline-none focus:bg-white/50 dark:focus:bg-black/50 px-3 rounded-2xl cursor-text">
+                        ${displayName}
+                    </h3>
+                    <div class="flex items-center gap-8">
+                        <div class="text-center md:text-right">
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-black tracking-[0.2em] uppercase lang-key" data-en="TERM GPA" data-zh="學期 GPA">TERM GPA</p>
+                            <p id="gpa-${currentId}" class="text-3xl font-black text-slate-950 dark:text-white">0.00</p>
+                        </div>
+                        <button onclick="removeSemester(${currentId})" class="w-12 h-12 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-all">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-8">
+                    <div id="course-list-${currentId}" class="course-list space-y-3"></div>
+                    <button onclick="addCourse(${currentId})" class="mt-8 px-6 py-3 rounded-2xl text-xs font-black text-slate-600 dark:text-slate-300 bg-slate-200/50 dark:bg-white/5 hover:bg-slate-300/50 transition-all border border-transparent hover:border-black/5">
+                        + <span class="lang-key" data-en="Add Subject" data-zh="新增科目">Add Subject</span>
+                    </button>
+                </div>
+            `;
+            container.appendChild(div);
+            if (!customName) { addCourse(currentId); addCourse(currentId); }
+            calculateAll();
+        }
+
+        function removeSemester(id) {
+            const el = document.getElementById(`semester-block-${id}`);
+            if (el) el.remove();
+            calculateAll();
+        }
+
+        function addCourse(semId, courseData = null) {
+            const list = document.getElementById(`course-list-${semId}`);
+            if (!list) return;
+            const div = document.createElement('div');
+            div.className = "course-row grid grid-cols-1 md:grid-cols-12 gap-3 p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-all group";
+            const code = courseData?.code || "";
+            const name = courseData?.name || "";
+            const credits = courseData?.credits || 3;
+            const grade = courseData?.grade || "";
+            
+            div.innerHTML = `
+                <div class="md:col-span-2"><input type="text" placeholder="CODE" value="${code}" class="course-code-input glass-input w-full h-12 px-4 rounded-xl text-xs font-black uppercase tracking-widest"></div>
+                <div class="md:col-span-5"><input type="text" placeholder="${currentLang === 'en' ? 'Course Title' : '課程名稱'}" value="${name}" class="course-name-input glass-input w-full h-12 px-5 rounded-xl text-sm font-bold"></div>
+                <div class="md:col-span-2"><input type="number" oninput="calculateAll()" value="${credits}" min="0" step="0.5" class="credit-input glass-input w-full h-12 px-4 rounded-xl text-sm text-center font-black"></div>
+                <div class="md:col-span-2">
+                    <select onchange="calculateAll()" class="grade-input glass-input w-full h-12 px-4 rounded-xl text-sm font-black cursor-pointer appearance-none">
+                        <option value="">Grade</option>
+                        ${Object.keys(gradeScale).map(g => `<option value="${g}" ${grade === g ? 'selected' : ''}>${g}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="md:col-span-1 flex items-center justify-center">
+                    <button onclick="this.closest('.course-row').remove(); calculateAll();" class="w-10 h-10 rounded-full text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">✕</button>
+                </div>
+            `;
+            list.appendChild(div);
+            calculateAll();
+        }
+
+        function calculateAll() {
+            let totalWeightedPoints = 0, totalGradedCredits = 0, grandTotalCredits = 0;
+            if (isQuickModeActive) {
+                const qCgpa = parseFloat(document.getElementById('quick-cgpa').value) || 0;
+                const qCredits = parseFloat(document.getElementById('quick-credits').value) || 0;
+                if (qCredits > 0) { totalWeightedPoints += (qCgpa * qCredits); totalGradedCredits += qCredits; grandTotalCredits += qCredits; }
+            }
+            document.querySelectorAll('.semester-block').forEach(semBlock => {
+                const id = semBlock.id.split('-').pop();
+                let semWeighted = 0, semGraded = 0, semTotal = 0;
+                semBlock.querySelectorAll('.course-row').forEach(row => {
+                    const credits = parseFloat(row.querySelector('.credit-input').value) || 0;
+                    const grade = row.querySelector('.grade-input').value;
+                    const points = gradeScale[grade];
+                    semTotal += credits;
+                    if (points !== undefined) { semWeighted += (credits * points); semGraded += credits; }
+                });
+                const semGPA = semGraded > 0 ? (semWeighted / semGraded) : 0;
+                const gpaEl = document.getElementById(`gpa-${id}`);
+                if (gpaEl) gpaEl.innerText = formatGPA(semGPA);
+                totalWeightedPoints += semWeighted; totalGradedCredits += semGraded; grandTotalCredits += semTotal;
+            });
+            const overallCGPA = totalGradedCredits > 0 ? (totalWeightedPoints / totalGradedCredits) : 0;
+            document.getElementById('overall-cgpa').innerText = formatGPA(overallCGPA);
+            document.getElementById('overall-credits').innerText = grandTotalCredits;
+            document.getElementById('overall-graded-credits').innerText = totalGradedCredits;
+        }
+
+        function formatGPA(value) {
+            return (roundingMode === 'up' ? Math.ceil(value * 100) / 100 : Math.round(value * 100) / 100).toFixed(2);
+        }
+
+        function setRounding(mode) {
+            roundingMode = mode;
+            document.getElementById('btn-round-off').className = mode === 'off' ? "px-6 py-2.5 rounded-xl text-xs font-black transition-all toggle-active" : "px-6 py-2.5 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-slate-400";
+            document.getElementById('btn-round-up').className = mode === 'up' ? "px-6 py-2.5 rounded-xl text-xs font-black transition-all toggle-active" : "px-6 py-2.5 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-slate-400";
+            calculateAll();
+        }
+
+        function saveToBrowser() {
+            const data = {
+                roundingMode, isQuickModeActive,
+                quickCgpa: document.getElementById('quick-cgpa').value,
+                quickCredits: document.getElementById('quick-credits').value,
+                semesters: Array.from(document.querySelectorAll('.semester-block')).map(sem => ({
+                    name: sem.querySelector('.semester-title').innerText,
+                    courses: Array.from(sem.querySelectorAll('.course-row')).map(row => ({
+                        code: row.querySelector('.course-code-input').value,
+                        name: row.querySelector('.course-name-input').value,
+                        credits: row.querySelector('.credit-input').value,
+                        grade: row.querySelector('.grade-input').value
+                    }))
+                }))
+            };
+            localStorage.setItem('cgpa_v3_data', JSON.stringify(data));
+            showToast('Progress saved!', '進度已儲存！');
+        }
+
+        function loadFromBrowser() {
+            const rawData = localStorage.getItem('cgpa_v3_data');
+            if (!rawData) return showToast('No backup found.', '找不到備份。');
+            try {
+                const data = JSON.parse(rawData);
+                document.getElementById('semesters-container').innerHTML = '';
+                semesterCount = 0;
+                setRounding(data.roundingMode || 'off');
+                if (data.isQuickModeActive && !isQuickModeActive) toggleQuickMode();
+                document.getElementById('quick-cgpa').value = data.quickCgpa || '';
+                document.getElementById('quick-credits').value = data.quickCredits || '';
+                data.semesters.forEach(sem => {
+                    addSemester(sem.name);
+                    const list = document.getElementById(`course-list-${semesterCount}`);
+                    list.innerHTML = '';
+                    sem.courses.forEach(c => addCourse(semesterCount, c));
+                });
+                calculateAll();
+                showToast('Records restored.', '紀錄已恢復。');
+            } catch (e) { showToast('Load error.', '讀取錯誤。'); }
+        }
+
+        function toggleQuickMode() {
+            const section = document.getElementById('quick-mode-section');
+            const icon = document.getElementById('quick-mode-icon');
+            isQuickModeActive = !isQuickModeActive;
+            section.classList.toggle('hidden', !isQuickModeActive);
+            icon.classList.toggle('rotate-90', isQuickModeActive);
+            calculateAll();
+        }
+
+        function openClearModal() { document.getElementById('clear-modal').classList.remove('hidden'); }
+        function closeClearModal() { document.getElementById('clear-modal').classList.add('hidden'); }
+        function confirmClearAllData() {
+            closeClearModal();
+            document.getElementById('semesters-container').innerHTML = '';
+            semesterCount = 0;
+            document.getElementById('quick-cgpa').value = '';
+            document.getElementById('quick-credits').value = '';
+            addSemester();
+            showToast('Data wiped.', '資料已清除。');
+        }
+
+        function exportData() {
+            let csv = "Semester,Code,Name,Credits,Grade\n";
+            document.querySelectorAll('.semester-block').forEach(sem => {
+                const name = sem.querySelector('.semester-title').innerText;
+                sem.querySelectorAll('.course-row').forEach(row => {
+                    csv += `"${name}","${row.querySelector('.course-code-input').value}","${row.querySelector('.course-name-input').value}",${row.querySelector('.credit-input').value},${row.querySelector('.grade-input').value}\n`;
+                });
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = "CGPA_Academic_Report.csv"; a.click();
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const lines = e.target.result.split('\n').filter(l => l.trim() !== "");
+                document.getElementById('semesters-container').innerHTML = '';
+                semesterCount = 0;
+                const semMap = {};
+                lines.slice(1).forEach(line => {
+                    const p = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    if (p.length < 5) return;
+                    const sName = p[0].replace(/"/g, '');
+                    if (!semMap[sName]) semMap[sName] = [];
+                    semMap[sName].push({ code: p[1].replace(/"/g, ''), name: p[2].replace(/"/g, ''), credits: p[3], grade: p[4].trim() });
+                });
+                Object.keys(semMap).forEach(name => {
+                    addSemester(name);
+                    const list = document.getElementById(`course-list-${semesterCount}`);
+                    list.innerHTML = '';
+                    semMap[name].forEach(c => addCourse(semesterCount, c));
+                });
+                calculateAll();
+            };
+            reader.readAsText(file);
+        }
+
+        window.onload = () => {
+            const savedLang = localStorage.getItem('cgpa_lang');
+            if (savedLang === 'zh') toggleLanguage();
+            const savedAccent = localStorage.getItem('cgpa_accent');
+            if (savedAccent) { document.getElementById('accent-picker').value = savedAccent; updateAccent(savedAccent); }
+            setThemeMode(localStorage.getItem('cgpa_theme_mode') || 'system');
+            addSemester();
+        };
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if (currentThemeMode === 'system') setThemeMode('system');
+        });
+    </script>
+</body>
+</html>

@@ -3,414 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Academic CGPA Calculator</title>
+    <title>CGPA Cal - Link Tree</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(226, 232, 240, 1);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        @keyframes rgb-glow {
+            0% { border-color: #ff0000; box-shadow: 0 0 12px #ff0000; }
+            33% { border-color: #00ff00; box-shadow: 0 0 12px #00ff00; }
+            66% { border-color: #0000ff; box-shadow: 0 0 12px #0000ff; }
+            100% { border-color: #ff0000; box-shadow: 0 0 12px #ff0000; }
         }
-        .input-field { transition: all 0.2s ease; border: 1px solid #e2e8f0; }
-        .input-field:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-        .grade-select {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 0.5rem center;
-            background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
-            padding-right: 2.5rem;
+
+        .rgb-button {
+            border: 2px solid transparent;
+            transition: transform 0.2s, filter 0.2s;
+            animation: rgb-glow 3s linear infinite;
+            aspect-ratio: 1 / 1;
         }
-        .toggle-active { background-color: #3b82f6; color: white; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3); }
-        #upload-input { display: none; }
+
+        .rgb-button:active {
+            transform: scale(0.95);
+            filter: brightness(0.8);
+        }
+
+        @media (hover: hover) {
+            .rgb-button:hover {
+                transform: scale(1.05);
+                filter: brightness(1.2);
+            }
+        }
+
+        /* Offset animation start for each button for a wave effect */
+        .btn-1 { animation-delay: 0s; }
+        .btn-2 { animation-delay: 0.6s; }
+        .btn-3 { animation-delay: 1.2s; }
+        .btn-4 { animation-delay: 1.8s; }
+        .btn-5 { animation-delay: 2.4s; }
+
+        body {
+            background-color: #0f172a;
+            color: white;
+        }
     </style>
 </head>
-<body class="py-10 px-4 md:px-0">
-    <div class="max-w-4xl mx-auto">
-        <header class="text-center mb-6">
-            <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">CGPA Calculator</h1>
-            <p class="text-slate-500 mt-2">Manage your academic progress without an account</p>
-        </header>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
 
-        <!-- Toolbar -->
-        <div class="flex flex-wrap justify-between items-center mb-8 gap-4">
-            <div class="bg-slate-200 p-1 rounded-xl flex gap-1">
-                <button id="btn-round-off" onclick="setRounding('off')" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all toggle-active">Round Off</button>
-                <button id="btn-round-up" onclick="setRounding('up')" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:bg-white/50">Round Up</button>
-            </div>
+    <!-- Header Section -->
+    <header class="mb-8 text-center">
+        <h1 class="text-4xl font-extrabold tracking-tight mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
+            CGPA Cal
+        </h1>
+        <p class="text-slate-400 text-sm md:text-base">Select a version to get started</p>
+        <p class="text-slate-400 text-sm md:text-base">Comment on functionality on 1, and interface on 2-4</p>
+        <p class="text-slate-400 text-sm md:text-base">5 is reserved for future use</p>
+        <p class="text-slate-400 text-sm md:text-base">Thank you for using CGPA Cal, and your support for testing!</p>
+    </header>
 
-            <div class="flex gap-2">
-                <input type="file" id="upload-input" accept=".csv" onchange="handleFileUpload(event)">
-                <button onclick="document.getElementById('upload-input').click()" class="bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center gap-2">
-                    <span>📤 Import CSV</span>
-                </button>
-                <button onclick="exportData()" class="bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center gap-2">
-                    <span>📥 Download Records</span>
-                </button>
-            </div>
-        </div>
+    <!-- Button Column -->
+    <main class="flex flex-col gap-5 w-full max-w-[180px]">
+        
+        <a href="./gpacal.html" target="_blank" class="rgb-button btn-1 bg-slate-800 rounded-xl flex items-center justify-center text-3xl font-bold">
+            1
+        </a>
 
-        <!-- Summary -->
-        <div class="glass-card rounded-2xl p-6 mb-8 flex flex-col md:flex-row items-center justify-between bg-blue-600 text-white border-none">
-            <div>
-                <p class="text-blue-100 text-sm font-medium uppercase tracking-wider">Overall CGPA</p>
-                <h2 id="overall-cgpa" class="text-5xl font-bold">0.00</h2>
-            </div>
-            <div class="flex gap-8 mt-4 md:mt-0 text-right">
-                <div>
-                    <p class="text-blue-100 text-xs uppercase tracking-wider">Total Credits</p>
-                    <p id="overall-credits" class="text-2xl font-semibold">0</p>
-                </div>
-                <div>
-                    <p class="text-blue-100 text-xs uppercase tracking-wider">Graded Credits</p>
-                    <p id="overall-graded-credits" class="text-2xl font-semibold">0</p>
-                </div>
-            </div>
-        </div>
+        <a href="./gpacal2.html" target="_blank" class="rgb-button btn-2 bg-slate-800 rounded-xl flex items-center justify-center text-3xl font-bold">
+            2
+        </a>
 
-        <!-- Quick Mode Section -->
-        <div class="mb-8">
-            <button onclick="toggleQuickMode()" class="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors mb-4">
-                <svg id="quick-mode-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transform transition-transform duration-200"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                Already have a CGPA? Use Quick Mode
-            </button>
-            
-            <div id="quick-mode-section" class="glass-card rounded-2xl p-6 hidden animate-in slide-in-from-top-2 duration-300 border-l-4 border-l-blue-500">
-                <h3 class="font-bold text-slate-800 mb-2">Past Academic Records</h3>
-                <p class="text-sm text-slate-500 mb-4">Enter your current CGPA and total graded credits to skip entering previous semesters.</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Previous CGPA</label>
-                        <input type="number" id="quick-cgpa" oninput="calculateAll()" step="0.01" min="0" max="4.3" placeholder="e.g. 3.50" class="input-field w-full px-4 py-2 rounded-xl text-sm font-medium">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Previous Graded Credits</label>
-                        <input type="number" id="quick-credits" oninput="calculateAll()" step="0.5" min="0" placeholder="e.g. 60" class="input-field w-full px-4 py-2 rounded-xl text-sm font-medium">
-                    </div>
-                </div>
-                <div class="mt-4 flex items-center justify-between">
-                    <span class="text-xs text-slate-400 italic">*These values will be added to the semesters below to calculate your new overall CGPA.</span>
-                    <button onclick="clearQuickMode()" class="text-xs text-red-500 hover:text-red-700 font-medium transition-colors">Clear Fields</button>
-                </div>
-            </div>
-        </div>
+        <a href="./gpacal3.html" target="_blank" class="rgb-button btn-3 bg-slate-800 rounded-xl flex items-center justify-center text-3xl font-bold">
+            3
+        </a>
 
-        <!-- Semesters Container -->
-        <div id="semesters-container" class="space-y-8"></div>
+        <a href="./gpacal4.html" target="_blank" class="rgb-button btn-4 bg-slate-800 rounded-xl flex items-center justify-center text-3xl font-bold">
+            4
+        </a>
 
-        <!-- Global Actions -->
-        <div class="mt-10 flex flex-wrap justify-center gap-4">
-            <button onclick="addSemester()" class="bg-slate-900 hover:bg-slate-800 text-white px-8 py-3 rounded-xl font-semibold transition-all shadow-lg">
-                + Add Semester
-            </button>
-            <button id="clear-btn" onclick="openClearModal()" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-8 py-3 rounded-xl font-semibold transition-all">
-                Clear All Data
-            </button>
-        </div>
-    </div>
+        <a href="https://example.com/v5" target="_blank" class="rgb-button btn-5 bg-slate-800 rounded-xl flex items-center justify-center text-3xl font-bold">
+            5
+        </a>
 
-    <!-- Custom Confirm Modal -->
-    <div id="clear-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in zoom-in-95 duration-200 text-center">
-            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-            </div>
-            <h3 class="text-xl font-bold text-slate-900 mb-2">Clear All Data?</h3>
-            <p class="text-slate-500 text-sm mb-6">This action cannot be undone. All your semesters and courses will be permanently removed.</p>
-            <div class="flex gap-3 justify-center">
-                <button onclick="closeClearModal()" class="px-5 py-2.5 rounded-xl font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all flex-1">Cancel</button>
-                <button onclick="confirmClearAllData()" class="px-5 py-2.5 rounded-xl font-semibold text-white bg-red-600 hover:bg-red-700 transition-all flex-1">Yes, Clear</button>
-            </div>
-        </div>
-    </div>
+    </main>
 
-    <script>
-        let semesterCount = 0;
-        let roundingMode = 'off';
-        let isQuickModeActive = false;
-        const gradeScale = {
-            "A+": 4.3, "A": 4.0, "A-": 3.7, "B+": 3.3, "B": 3.0, "B-": 2.7,
-            "C+": 2.3, "C": 2.0, "C-": 1.7, "D+": 1.3, "D": 1.0, "F": 0.0
-        };
+    <footer class="mt-12 text-slate-500 text-xs italic">
+        Multiple Versions Hub &copy; 2024
+    </footer>
 
-        function addSemester(customName = null) {
-            semesterCount++;
-            const container = document.getElementById('semesters-container');
-            const div = document.createElement('div');
-            const currentId = semesterCount;
-            const displayName = customName || `Semester ${currentId}`;
-            
-            div.id = `semester-block-${currentId}`;
-            div.className = "semester-block glass-card rounded-2xl overflow-hidden border-slate-200";
-            div.innerHTML = `
-                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                    <h3 contenteditable="true" onkeypress="return event.key != 'Enter';" title="Click to rename semester" class="semester-title font-bold text-slate-800 text-lg outline-none border-b border-transparent focus:border-blue-500 hover:border-slate-300 transition-colors cursor-text px-1 -ml-1 rounded">${displayName}</h3>
-                    <div class="flex items-center gap-4">
-                        <div class="text-right">
-                            <p class="text-[10px] text-slate-400 uppercase font-bold">GPA</p>
-                            <p id="gpa-${currentId}" class="text-xl font-bold text-blue-600">0.00</p>
-                        </div>
-                        <button onclick="removeSemester(${currentId})" class="text-red-400 hover:text-red-600 transition-colors">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="p-6">
-                    <div id="course-list-${currentId}" class="course-list space-y-3"></div>
-                    <button onclick="addCourse(${currentId})" class="mt-4 text-sm font-medium text-blue-600 hover:text-blue-700">+ Add Course</button>
-                </div>
-            `;
-            container.appendChild(div);
-            
-            if (!customName) {
-                addCourse(currentId);
-                addCourse(currentId);
-            }
-            calculateAll();
-        }
-
-        function removeSemester(id) {
-            const el = document.getElementById(`semester-block-${id}`);
-            if (el) el.remove();
-            calculateAll();
-        }
-
-        function addCourse(semId, courseData = null) {
-            const list = document.getElementById(`course-list-${semId}`);
-            if (!list) return;
-            const div = document.createElement('div');
-            div.className = "course-row grid grid-cols-1 md:grid-cols-12 gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors";
-            
-            const code = courseData ? courseData.code : "";
-            const name = courseData ? courseData.name : "";
-            const credits = courseData ? courseData.credits : 3;
-            const grade = courseData ? courseData.grade : "";
-
-            div.innerHTML = `
-                <div class="col-span-2"><input type="text" placeholder="CS101" value="${code}" class="course-code-input input-field w-full px-3 py-2 rounded-lg text-sm uppercase"></div>
-                <div class="col-span-5"><input type="text" placeholder="Course Name" value="${name}" class="course-name-input input-field w-full px-3 py-2 rounded-lg text-sm"></div>
-                <div class="col-span-2"><input type="number" oninput="calculateAll()" value="${credits}" min="0" step="0.5" class="credit-input input-field w-full px-3 py-2 rounded-lg text-sm text-center font-semibold"></div>
-                <div class="col-span-2">
-                    <select onchange="calculateAll()" class="grade-input input-field grade-select w-full px-3 py-2 rounded-lg text-sm font-bold bg-white">
-                        <option value="">Grade</option>
-                        ${Object.keys(gradeScale).map(g => `<option value="${g}" ${grade === g ? 'selected' : ''}>${g}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="col-span-1 flex items-center justify-center">
-                    <button onclick="this.closest('.course-row').remove(); calculateAll();" class="text-slate-300 hover:text-red-400">✕</button>
-                </div>
-            `;
-            list.appendChild(div);
-            calculateAll();
-        }
-
-        function toggleQuickMode() {
-            const section = document.getElementById('quick-mode-section');
-            const icon = document.getElementById('quick-mode-icon');
-            isQuickModeActive = !isQuickModeActive;
-            
-            if (isQuickModeActive) {
-                section.classList.remove('hidden');
-                icon.classList.add('rotate-90');
-            } else {
-                section.classList.add('hidden');
-                icon.classList.remove('rotate-90');
-            }
-            calculateAll();
-        }
-
-        function clearQuickMode() {
-            document.getElementById('quick-cgpa').value = '';
-            document.getElementById('quick-credits').value = '';
-            calculateAll();
-        }
-
-        function calculateAll() {
-            let totalWeightedPoints = 0;
-            let totalGradedCredits = 0;
-            let grandTotalCredits = 0;
-
-            if (isQuickModeActive) {
-                const quickCgpa = parseFloat(document.getElementById('quick-cgpa').value) || 0;
-                const quickCredits = parseFloat(document.getElementById('quick-credits').value) || 0;
-                
-                if (quickCredits > 0) {
-                    totalWeightedPoints += (quickCgpa * quickCredits);
-                    totalGradedCredits += quickCredits;
-                    grandTotalCredits += quickCredits;
-                }
-            }
-
-            document.querySelectorAll('.semester-block').forEach(semBlock => {
-                const idMatch = semBlock.id.match(/\d+/);
-                if (!idMatch) return;
-                const id = idMatch[0];
-                let semWeighted = 0, semGraded = 0, semTotal = 0;
-
-                semBlock.querySelectorAll('.course-row').forEach(row => {
-                    const credits = parseFloat(row.querySelector('.credit-input').value) || 0;
-                    const grade = row.querySelector('.grade-input').value;
-                    const points = gradeScale[grade];
-                    
-                    semTotal += credits;
-                    if (points !== undefined) {
-                        semWeighted += (credits * points);
-                        semGraded += credits;
-                    }
-                });
-
-                const semGPA = semGraded > 0 ? (semWeighted / semGraded) : 0;
-                const gpaEl = document.getElementById(`gpa-${id}`);
-                if (gpaEl) gpaEl.innerText = formatGPA(semGPA);
-                
-                totalWeightedPoints += semWeighted;
-                totalGradedCredits += semGraded;
-                grandTotalCredits += semTotal;
-            });
-
-            const overallCGPA = totalGradedCredits > 0 ? (totalWeightedPoints / totalGradedCredits) : 0;
-            document.getElementById('overall-cgpa').innerText = formatGPA(overallCGPA);
-            document.getElementById('overall-credits').innerText = grandTotalCredits;
-            document.getElementById('overall-graded-credits').innerText = totalGradedCredits;
-        }
-
-        function formatGPA(value) {
-            return (roundingMode === 'up' ? Math.ceil(value * 100) / 100 : Math.round(value * 100) / 100).toFixed(2);
-        }
-
-        function setRounding(mode) {
-            roundingMode = mode;
-            document.getElementById('btn-round-off').className = mode === 'off' ? "px-4 py-1.5 rounded-lg text-sm font-semibold transition-all toggle-active" : "px-4 py-1.5 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:bg-white/50";
-            document.getElementById('btn-round-up').className = mode === 'up' ? "px-4 py-1.5 rounded-lg text-sm font-semibold transition-all toggle-active" : "px-4 py-1.5 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:bg-white/50";
-            calculateAll();
-        }
-
-        function openClearModal() {
-            document.getElementById('clear-modal').classList.remove('hidden');
-        }
-
-        function closeClearModal() {
-            document.getElementById('clear-modal').classList.add('hidden');
-        }
-
-        function confirmClearAllData() {
-            closeClearModal();
-            const container = document.getElementById('semesters-container');
-            container.innerHTML = '';
-            semesterCount = 0;
-            
-            document.getElementById('quick-cgpa').value = '';
-            document.getElementById('quick-credits').value = '';
-            
-            addSemester();
-            calculateAll();
-        }
-
-        function exportData() {
-            let csvLines = [];
-            // Updated Header
-            csvLines.push("Type,SemesterName,CourseCode,CourseName,Credits,Grade");
-
-            // Export Quick Mode Info if values exist
-            const qCgpa = document.getElementById('quick-cgpa').value;
-            const qCredits = document.getElementById('quick-credits').value;
-            if (isQuickModeActive && (qCgpa || qCredits)) {
-                csvLines.push(`QUICK,PREV_RECORDS,${qCgpa},${qCredits},0,`);
-            }
-
-            // Export Semester Info
-            document.querySelectorAll('.semester-block').forEach(semBlock => {
-                const semName = semBlock.querySelector('.semester-title').innerText.replace(/,/g, '');
-                semBlock.querySelectorAll('.course-row').forEach(row => {
-                    const code = (row.querySelector('.course-code-input')?.value || "").replace(/,/g, '');
-                    const name = (row.querySelector('.course-name-input')?.value || "").replace(/,/g, '');
-                    const credits = row.querySelector('.credit-input')?.value || 0;
-                    const grade = row.querySelector('.grade-input')?.value || "";
-                    csvLines.push(`COURSE,"${semName}","${code}","${name}",${credits},${grade}`);
-                });
-            });
-
-            const csvString = csvLines.join('\n');
-            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "CGPA_Records.csv";
-            link.click();
-        }
-
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const lines = e.target.result.split('\n');
-                if (lines.length < 2) return;
-
-                // Clear current data
-                document.getElementById('semesters-container').innerHTML = '';
-                semesterCount = 0;
-                clearQuickMode();
-
-                const semestersData = {};
-                const semesterNames = [];
-
-                for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    
-                    const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    if (parts.length < 6) continue;
-
-                    const type = parts[0];
-                    if (type === 'QUICK') {
-                        if (!isQuickModeActive) toggleQuickMode();
-                        document.getElementById('quick-cgpa').value = parts[2];
-                        document.getElementById('quick-credits').value = parts[3];
-                    } else {
-                        const semName = parts[1].replace(/"/g, '');
-                        if (!semestersData[semName]) {
-                            semestersData[semName] = [];
-                            semesterNames.push(semName);
-                        }
-                        semestersData[semName].push({
-                            code: parts[2].replace(/"/g, ''),
-                            name: parts[3].replace(/"/g, ''),
-                            credits: parts[4],
-                            grade: parts[5]
-                        });
-                    }
-                }
-
-                // If it's an old version CSV (5 columns), fallback
-                if (semesterNames.length === 0 && lines[1].split(',').length >= 5) {
-                    for(let i=1; i<lines.length; i++) {
-                        const parts = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                        const semId = "Semester " + parts[0];
-                        if (!semestersData[semId]) { semestersData[semId] = []; semesterNames.push(semId); }
-                        semestersData[semId].push({ code: parts[1], name: parts[2], credits: parts[3], grade: parts[4] });
-                    }
-                }
-
-                semesterNames.forEach(name => {
-                    addSemester(name);
-                    const list = document.getElementById(`course-list-${semesterCount}`);
-                    list.innerHTML = ''; // Reset the default empty rows
-                    semestersData[name].forEach(c => addCourse(semesterCount, c));
-                });
-
-                calculateAll();
-            };
-            reader.readAsText(file);
-            event.target.value = '';
-        }
-
-        // Initialize first semester
-        if (semesterCount === 0) {
-            addSemester();
-        }
-    </script>
 </body>
 </html>
