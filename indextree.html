@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CGPA Cal - Link Tree</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes rgb-glow {
+            0% { border-color: #ff0000; box-shadow: 0 0 12px #ff0000; }
+            33% { border-color: #00ff00; box-shadow: 0 0 12px #00ff00; }
+            66% { border-color: #0000ff; box-shadow: 0 0 12px #0000ff; }
+            100% { border-color: #ff0000; box-shadow: 0 0 12px #ff0000; }
+        }
+
+        .rgb-button {
+            border: 2px solid transparent;
+            transition: transform 0.2s, filter 0.2s;
+            animation: rgb-glow 3s linear infinite;
+            aspect-ratio: 1 / 1;
+        }
+
+        .rgb-button:active {
+            transform: scale(0.95);
+            filter: brightness(0.8);
+        }
+
+        @media (hover: hover) {
+            .rgb-button:hover {
+                transform: scale(1.05);
+                filter: brightness(1.2);
+            }
+        }
+
+        /* Offset animation start for each button for a wave effect */
+        .btn-1 { animation-delay: 0s; }
+        .btn-2 { animation-delay: 0.6s; }
+        .btn-3 { animation-delay: 1.2s; }
+        .btn-4 { animation-delay: 1.8s; }
+        .btn-5 { animation-delay: 2.4s; }
+
+        body {
+            background-color: #0f172a;
+            color: white;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Header Section -->
+    <header class="mb-8 text-center">
+        <h1 class="text-4xl font-extrabold tracking-tight mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
+            CGPA Cal
+        </h1>
+        <p class="text-slate-400 text-sm md:text-base">Select a version to get started</p>
+        <p class="text-slate-400 text-sm md:text-base">Comment on functionality on 1, and interface on 2-4</p>
+        <p class="text-slate-400 text-sm md:text-base">5 is reserved for future use</p>
+        <p class="text-slate-400 text-sm md:text-base">Thank you for using CGPA Cal, and your support for testing!</p>
+    </header>
+
+    <!-- Button Column -->
+    <main class="flex flex-col gap-5 w-full max-w-[180px]">
+        
+        <a href="./gpacal.html" target="_blank" class="rgb-button btn-1 bg-slate-800 rounded-xl flex items-center justify-center text-3xl font-bold">
+            1
+        </a>
+
+        <a href="./gpacal2.html" target="_blank" class="rgb-button btn-2 bg-slate-800 rounded-xl flex items-center justify-center text-3xl font-bold">
+            2
+        </a>
+
+        <a href="./gpacal3.html" target="_blank" class="rgb-button btn-3 bg-slate-800 rounded-xl flex items-center justify-center text-3xl font-bold">
+            3
+        </a>
+
+        <a href="./gpacal4.html" target="_blank" class="rgb-button btn-4 bg-slate-800 rounded-xl flex items-center justify-center text-3xl font-bold">
+            4
+        </a>
+
+        <a href="https://example.com/v5" target="_blank" class="rgb-button btn-5 bg-slate-800 rounded-xl flex items-center justify-center text-3xl font-bold">
+            5
+        </a>
+
+    </main>
+
+    <footer class="mt-12 text-slate-500 text-xs italic">
+        Multiple Versions Hub &copy; 2024
+    </footer>
+
+</body>
+</html>
